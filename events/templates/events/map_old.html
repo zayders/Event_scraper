@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Event Map</title>
+    <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css">
+    <style>
+        .map {
+            height: 100vh;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Event Map</h2>
+    <div id="map" class="map"></div>
+    <script>
+        var map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([2.2137, 46.2276]), // Centre de la France
+                zoom: 6
+            })
+        });
+
+        // Fonction pour charger les événements
+        function loadEvents() {
+            fetch("{% url 'event_data' %}")
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(event => {
+                        if (event.latitude && event.longitude) {
+                            var marker = new ol.Feature({
+                                geometry: new ol.geom.Point(ol.proj.fromLonLat([event.longitude, event.latitude])),
+                                name: event.name,
+                                date: event.date,
+                                location: event.location
+                            });
+
+                            marker.setStyle(new ol.style.Style({
+                                image: new ol.style.Icon({
+                                    anchor: [0.5, 1],
+                                    src: 'https://openlayers.org/en/v4.6.5/examples/data/icon.png'
+                                })
+                            }));
+
+                            var vectorSource = new ol.source.Vector({
+                                features: [marker]
+                            });
+
+                            var markerVectorLayer = new ol.layer.Vector({
+                                source: vectorSource,
+                            });
+
+                            map.addLayer(markerVectorLayer);
+                        }
+                    });
+                });
+        }
+
+        loadEvents();
+    </script>
+</body>
+
+</html>

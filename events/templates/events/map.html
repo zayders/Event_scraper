@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Event Map</title>
+    <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css">
+    <style>
+        .map {
+            height: 100vh;
+            width: 100%;
+        }
+
+        .ol-popup {
+            position: absolute;
+            background-color: white;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #cccccc;
+            bottom: 12px;
+            left: -50px;
+            min-width: 180px;
+        }
+
+        .ol-popup:after,
+        .ol-popup:before {
+            top: 100%;
+            border: solid transparent;
+            content: " ";
+            height: 0;
+            width: 0;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .ol-popup:after {
+            border-top-color: white;
+            border-width: 10px;
+            left: 48px;
+            margin-left: -10px;
+        }
+
+        .ol-popup:before {
+            border-top-color: #cccccc;
+            border-width: 11px;
+            left: 48px;
+            margin-left: -11px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Event Map</h2>
+    <div id="map" class="map"></div>
+
+    <script>
+        var map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([2.2137, 46.2276]), // Centre de la France
+                zoom: 6
+            })
+        });
+
+        var vectorSource = new ol.source.Vector();
+
+        var clusterSource = new ol.source.Cluster({
+            distance: 50,
+            source: vectorSource
+        });
+
+        var styleCache = {};
+        var clusters = new ol.layer.Vector({
+            source: clusterSource,
+            style: function (feature) {
+                var size = feature.get('features').length;
+                var style = styleCache[size];
+                if (!style) {
+                    style = new ol.style.Style({
+                        image: new ol.style.Circle({
+                            radius: 10 + (size * 0.4),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff'
+                            }),
+                            fill: new ol.style.Fill({
+                                color: '#3399CC'
+                            })
+                        }),
+                        text: new ol.style.Text({
+                            text: size.toString(),
+                            fill: new ol.style.Fill({
+                                color: '#fff'
+                            })
+                        })
+                    });
+                    styleCache[size] = style;
+                }
+                return style;
+            }
+        });
+
+        map.addLayer(clusters);
+
+        var popup = new ol.Overlay({
+            element: document.createElement('div'),
+            positioning: 'bottom-center',
+            stopEvent: false,
+            offset: [0, -20],
+        });
+        map.addOverlay(popup);
+
+        var element = popup.getElement();
+        element.className = 'ol-popup';
+
+        map.on('click', function (event) {
+            var feature = map.forEachFeatureAtPixel(event.pixel, function (feature) {
+                return feature;
+            });
+            if (feature) {
+                var features = feature.get('features');
+                if (features.length === 1) {
+                    var properties = features[0].getProperties();
+                    var coordinates = features[0].getGeometry().getCoordinates();
+                    popup.setPosition(coordinates);
+                    element.innerHTML = `<strong>${properties.name}</strong><br>${properties.date}<br>${properties.location}`;
+                    element.style.display = 'block';
+                } else {
+                    element.style.display = 'none';
+                }
+            } else {
+                element.style.display = 'none';
+            }
+        });
+
+        // Fonction pour charger les événements
+        function loadEvents() {
+            fetch("{% url 'event_data' %}")
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(event => {
+                        if (event.latitude && event.longitude) {
+                            var marker = new ol.Feature({
+                                geometry: new ol.geom.Point(ol.proj.fromLonLat([event.longitude, event.latitude])),
+                                name: event.name,
+                                date: event.date,
+                                location: event.location
+                            });
+                            vectorSource.addFeature(marker);
+                        }
+                    });
+                });
+        }
+
+        loadEvents();
+    </script>
+</body>
+
+</html>

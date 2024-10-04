@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css" type="text/css">
+    <script src="https://cdn.jsdelivr.net/npm/ol/ol.js"></script>
+    <title>Event List</title>
+</head>
+<body>
+    
+    <h1>Event List</h1>
+    <ul>
+        {% for event in events %}
+            <li>
+                <h2>{{ event.name }}</h2>
+                <p>Date: {{ event.date }}</p>
+                <p>Location: {{ event.location }}</p>
+                <p>Link: <a href="{{ event.link }}">{{ event.link }}</a></p>
+                <h3>Formats:</h3>
+                <ul>
+                    {% for format in event.formats.all %}
+                        <li>{{ format.distance }} - {{ format.format }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
