@@ -2,6 +2,9 @@ from django.core.management.base import BaseCommand
 from events.models import Event
 import re
 
+
+# Le champ Location contient du texte : CODE POSTAL + NOM DE LA VILLE
+# Cette commande scinde les deux dans deux champs ! City et Postal_code
 class Command(BaseCommand):
     help = 'Update city and postal code for events based on location'
 

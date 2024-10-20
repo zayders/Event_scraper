@@ -18,7 +18,7 @@ def get_event_count():
 # Fonction pour récupérer les données d'une page spécifique
 def fetch_data(limit_start):
     params = {'limitstart': limit_start}
-    response = requests.get(base_url, params=params)
+    response = requests.get(base_url, params=params,timeout=10)
     if response.status_code == 200:
         return response.text
     else:
@@ -82,7 +82,7 @@ class Command(BaseCommand):
                         # Créer ou obtenir le format sans dupliquer
                         format_obj, created = Format.objects.get_or_create(
                             distance=distance,
-                            defaults={'format': format},
+                            format=format,
                         )
 
                         # Ajouter le format à l'événement

@@ -1,8 +1,11 @@
 from django.db import models
 
 class Format(models.Model):
-    distance = models.CharField(max_length=100, unique=True)
+    distance = models.CharField(max_length=100)
     format = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ('distance', 'format')  # Contrainte d'unicité combinée
 
     def __str__(self):
         return f"{self.distance} - {self.format}"
