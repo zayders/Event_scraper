@@ -125,14 +125,22 @@
             });
             if (feature) {
                 var features = feature.get('features');
-                if (features.length === 1) {
-                    var properties = features[0].getProperties();
+                console.log(features);
+                if (features.length > 0 && features.length <= 3) {
                     var coordinates = features[0].getGeometry().getCoordinates();
+                    var content = '';
+                    
+                    // Boucle pour afficher tous les événements
+                    features.forEach(function (f) {
+                        var properties = f.getProperties();
+                        content += `<strong>${properties.name}</strong><br>Date: ${properties.date}<br>Location: ${properties.location}<br><br>`;
+                    });
+                    
+                    
+
                     popup.setPosition(coordinates);
-                    element.innerHTML = `<strong>${properties.name}</strong><br>${properties.date}<br>${properties.location}`;
+                    element.innerHTML = content;
                     element.style.display = 'block';
-                } else {
-                    element.style.display = 'none';
                 }
             } else {
                 element.style.display = 'none';
